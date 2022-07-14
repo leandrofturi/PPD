@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import time
 import uuid
@@ -6,14 +7,21 @@ import pika
 import random
 import signal
 import hashlib
-from pprint import pprint
 
-from multiprocessing import Process, Queue, Pipe
+from multiprocessing import Process, Pipe
 
-N = 2
+N = 4
 JOBS_SIZE = 1
 CHALENGE_MAP = {d: bin(int("".join(map(str, [1] * d)), 2)) for d in range(1, 128)}
-CHALLENGE_LEVEL = 8
+
+CHALLENGE_LEVEL = random.randint(5, 9)
+
+
+def tabulate(dict_table):
+    print(f"transaction id\t|\tchallenge\t|\tseed\t|\twinner")
+    for k, v in dict_table.items():
+        print(f"{k}\t|\t{v['challenge']}\t|\t{v['seed']}\t|\t{v['winner']}")
+    print()
 
 
 class Node:
@@ -28,12 +36,13 @@ class Node:
         #  5: mine is done, awaiting voting
         # -1: error
 
-        self.id = str(uuid.uuid4())
+        self.id = uuid.uuid4().int >> 64
         self.nodes = {self.id}
         print(self.id)
         self.jobs = []
         self.conn_receive, self.conn_send = Pipe()
-        signal.signal(signal.SIGCHLD, self.handler)
+        self.pid = os.getpid()
+        signal.signal(signal.SIGBREAK, self.handler) # SIGCHLD unix
 
         self.challenge_table = {}
         self.election = {}
@@ -107,12 +116,12 @@ class Node:
     def callback_entrance(self, r):
         if r["id"] not in self.nodes:
             self.nodes.add(r["id"])
-            print(f"{r['id']} inside chain! {len(self.nodes)} participants.")
+            # print(f"{r['id']} inside chain! {len(self.nodes)} participants.")
 
             self.announce()
 
         if (len(self.nodes) >= N) and (self.state == 1):
-            print(f"STARTED!")
+            # print(f"STARTED!")
 
             if self.id not in self.election.keys():
                 self.apply()
@@ -122,7 +131,7 @@ class Node:
             return
 
         if r["id"] not in self.nodes:
-            print(f"Invalid id {r['id']}")
+            # print(f"Invalid id {r['id']}")
             return
 
         self.election[r["id"]] = r["ticket"]
@@ -133,16 +142,16 @@ class Node:
             self.state = 3
             if self.leader == self.id:
                 self.generate_challenge()
-                print(f"Leader is me")
-            else:
-                print(f"Leader is {self.leader}")
+                # print(f"Leader is me")
+            # else:
+            # print(f"Leader is {self.leader}")
 
     def callback_challenge(self, r):
         if self.state != 3:
             return
 
         if r["id"] != self.leader:
-            print(f"Invalid leader {r['id']}")
+            # print(f"Invalid leader {r['id']}")
             return
 
         self.challenge_table[r["transaction_id"]] = {
@@ -151,7 +160,9 @@ class Node:
             "winner": None,
         }
         self.state = 4
-        pprint(self.challenge_table)
+        print("##########")
+        tabulate(self.challenge_table)
+        print("##########")
         self.mine(r["transaction_id"], r["challenge"])
 
     def callback_submit(self, r):
@@ -202,13 +213,15 @@ class Node:
                 self.ballotbox[node_id] = {voter_id: 1}
 
             if len(self.ballotbox[node_id]) > N // 2:
-                print(f"{node_id} solved!")
+                # print(f"{node_id} solved!")
                 self.challenge_table[transaction_id]["winner"] = node_id
                 self.challenge_table[transaction_id]["seed"] = seed
-                pprint(self.challenge_table)
+                print("##########")
+                tabulate(self.challenge_table)
+                print("##########")
 
-                # self.state = 2
-                # self.apply()
+                self.state = 2
+                self.apply()
 
     def announce(self):
         data = {"id": self.id}
@@ -225,7 +238,7 @@ class Node:
         self.clean_election()
         ticket = random.random()
         self.election[self.id] = ticket
-        print(f"voting with ticket {ticket}")
+        # print(f"voting with ticket {ticket}")
 
         data = {"id": self.id, "ticket": ticket}
         self.channel.basic_publish(
@@ -251,15 +264,19 @@ class Node:
             properties=pika.BasicProperties(delivery_mode=2),
         )
 
-    def search(transaction_id, challenge, conn_send, speed):
+    def search(transaction_id, challenge, pid, conn_send, speed):
         chalenge_str = CHALENGE_MAP[challenge]
         if speed:
-            print(f"sleeping for {speed}s")
+            # print(f"sleeping for {speed}s")
             time.sleep(speed)
 
         seed = str(uuid.uuid4())
         hash_object = bin(int(hashlib.sha1(seed.encode("UTF-8")).hexdigest(), 16))
         while not hash_object.startswith(chalenge_str):  # equals to one
+            if speed:
+                # print(f"sleeping for {speed}s")
+                time.sleep(speed)
+
             seed = str(uuid.uuid4())
             hash_object = bin(int(hashlib.sha1(seed.encode("UTF-8")).hexdigest(), 16))
 
@@ -267,7 +284,7 @@ class Node:
             {"transaction_id": transaction_id, "challenge": challenge, "seed": seed}
         )
 
-        signal.raise_signal(signal.SIGCHLD)
+        os.kill(pid, signal.CTRL_BREAK_EVENT) # SIGCHLD unix
 
     def mine(self, transaction_id, challenge):
         # multiprocess
@@ -276,7 +293,7 @@ class Node:
         for i in range(JOBS_SIZE):
             p = Process(
                 target=Node.search,
-                args=(transaction_id, challenge, self.conn_send, self.speed),
+                args=(transaction_id, challenge, self.pid, self.conn_send, self.speed),
                 daemon=True,
             )
             self.jobs.append(p)
@@ -284,9 +301,9 @@ class Node:
 
     def handler(self, signum, frame):
         r = self.conn_receive.recv()
-        transaction_id, challenge, seed = r['transaction_id'], r['challenge'], r['seed']
+        transaction_id, challenge, seed = r["transaction_id"], r["challenge"], r["seed"]
 
-        print(f"found {seed} for challenge {challenge}")
+        # print(f"found {seed} for challenge {challenge}")
         data = {
             "id": self.id,
             "transaction_id": transaction_id,
@@ -330,3 +347,14 @@ class Node:
 
             return True
         return False
+
+
+if __name__ == "__main__":
+    try:
+        Node().join()
+    except KeyboardInterrupt:
+        print("Interrupted!")
+        try:
+            sys.exit(0)
+        except SystemExit:
+            os._exit(0)
