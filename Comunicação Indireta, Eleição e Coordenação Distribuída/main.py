@@ -1,13 +1,9 @@
 import sys, os
 from node import Node
 
-def main():
-    node = Node()
-    node.join()
-
 if __name__ == "__main__":
     try:
-        main()
+        Node(1000).join()
     except KeyboardInterrupt:
         print("Interrupted!")
         try:
