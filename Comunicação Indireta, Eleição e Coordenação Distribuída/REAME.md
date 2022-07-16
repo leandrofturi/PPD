@@ -2,6 +2,8 @@
 
 Leandro Furlam, Isauflânia Ribeiro, Allan Fermao
 
+[Video (16/07/2022)](https://drive.google.com/file/d/1vzsqXTEsMnqs4J2i_-FyfzS4k-6xFLT3/view?usp=sharing)
+
 ## Identificador
 
 Gerado com [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier). Quando gerados de acordo com os métodos padrão, os UUIDs são, para fins práticos, únicos. Sua singularidade não depende de uma autoridade central de registro ou coordenação entre as partes que as geram, ao contrário da maioria dos outros esquemas de numeração. Embora a probabilidade de um UUID ser duplicado não seja zero, é perto o suficiente de zero para ser insignificante. Para fins de implementação, foi convertido para inteiro, [mantendo os conceitos](https://stackoverflow.com/questions/3530294/how-to-generate-unique-64-bits-integers-from-python).

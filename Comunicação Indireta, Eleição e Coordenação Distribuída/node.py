@@ -17,13 +17,6 @@ CHALENGE_MAP = {d: bin(int("".join(map(str, [1] * d)), 2)) for d in range(1, 128
 CHALLENGE_LEVEL = random.randint(5, 9)
 
 
-def tabulate(dict_table):
-    print(f"transaction id\t|\tchallenge\t|\tseed\t|\twinner")
-    for k, v in dict_table.items():
-        print(f"{k}\t|\t{v['challenge']}\t|\t{v['seed']}\t|\t{v['winner']}")
-    print()
-
-
 class Node:
     def __init__(self, speed=0):
         self.speed = speed
@@ -102,6 +95,8 @@ class Node:
         r = json.loads(body.decode("utf-8"))
         keys = r.keys()
 
+        if (len(keys) == 1) and ("id" in keys):
+            self.callback_entrance(r)
         if "vote" in keys:
             self.callback_ballotbox(r)
         elif "seed" in keys:
@@ -110,8 +105,6 @@ class Node:
             self.callback_challenge(r)
         elif "ticket" in keys:
             self.callback_election(r)
-        elif "id" in keys:
-            self.callback_entrance(r)
 
     def callback_entrance(self, r):
         if r["id"] not in self.nodes:
@@ -161,7 +154,7 @@ class Node:
         }
         self.state = 4
         print("##########")
-        tabulate(self.challenge_table)
+        print(self.challenge_table)
         print("##########")
         self.mine(r["transaction_id"], r["challenge"])
 
@@ -217,7 +210,7 @@ class Node:
                 self.challenge_table[transaction_id]["winner"] = node_id
                 self.challenge_table[transaction_id]["seed"] = seed
                 print("##########")
-                tabulate(self.challenge_table)
+                print(self.challenge_table)
                 print("##########")
 
                 self.state = 2
