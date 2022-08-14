@@ -17,7 +17,7 @@ from Crypto.Signature import PKCS1_v1_5
 
 from multiprocessing import Process, Pipe
 
-N = 4
+N = 3
 JOBS_SIZE = 1
 SEED_SIZE = 64
 CHALLENGE_LEVEL_RANGE = (7, 7)

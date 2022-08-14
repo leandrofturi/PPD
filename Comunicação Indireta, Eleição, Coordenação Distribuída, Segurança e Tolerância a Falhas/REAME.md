@@ -2,7 +2,7 @@
 
 Leandro Furlam, Isauflânia Ribeiro, Allan Fermao
 
-[Video (16/07/2022)](https://drive.google.com/file/d/1vzsqXTEsMnqs4J2i_-FyfzS4k-6xFLT3/view?usp=sharing)
+[Video (14/08/2022)](https://drive.google.com/file/d/1vzsqXTEsMnqs4J2i_-FyfzS4k-6xFLT3/view?usp=sharing)
 
 ## Identificador
 
@@ -48,7 +48,7 @@ Para entrar na rede, basta submeter o identificador na exchange *ppd/init*. Cada
 
 Após todos estarem na rede, é realizada a troca de chaves públicas de cada nó, na exchange *ppd/pubkey*, sendo salvas em um dicionário no próprio nó. Como os testes são realizados na mesma máquina, salvamos (apenas para segurança) as chaves públicas a privadas na pasta `keys`, com a nomenclatura `{id}-private/public.key"`. No caso da execução as chaves são armazenadas em memória.
 
-A não ser nas exchanges *ppd/init* e *ppd/pubkey*, todas as demais possuem mensagem assinadas pelo autor (`NodeId`). Logo, sempre é realizada a verificação da veracidade da informação, (1) obtendo a respectiva chave já armazenada em memória, (2) destacando-se à mensagem original do conjunto recebido, (3) verificando a veracidade da mensagem.
+A não ser nas exchanges *ppd/init* e *ppd/pubkey*, todas as demais possuem mensagem assinadas pelo autor (`NodeId`). Logo, sempre é realizada a verificação da veracidade da informação, (1) obtendo a respectiva chave já armazenada em memória, (2) destacando-se à mensagem original do conjunto recebido, (3) verificando a veracidade da mensagem. Caso  a mensagem não seja verídica, a respectiva ação (privinda do callback) não é realizada.
 
 ## Eleição e Geração do desafio
 
@@ -56,7 +56,7 @@ A eleição do líder se dá através da exchange *ppd/election*, onde cada um e
 
 ## Mineração
 
-A geração da string aleatória deu-se através da técnica mais rápida encontrada, através da string hexadecimal gerada pelo comando `os.urandom(size)`, cujo `size` definido foi de 64. Para conversão utilizou-se a biblioteca `binascii`, que converte entre binário e ASCII, através do comando `binascii.hexlify(os.urandom(SEED_SIZE))`
+A geração da string aleatória deu-se através da técnica mais rápida encontrada, através da string hexadecimal gerada pelo comando `os.urandom(size)`, cujo `size` definido foi de 64. Para conversão utilizou-se a biblioteca `binascii`, que converte entre binário e ASCII, através do comando `binascii.hexlify(os.urandom(SEED_SIZE))`.
 
 Com o desafio recebido - todos devem obter o desafio da fila de mensagens, e não da própria geração local - inicia-se a mineração. A mineração se dá em `JOBS_SIZE` subprocessos, objetivando aproveitar os núcleos de processamento. Veja que os subprocessos funcionam como ''zombies´´, pois o programa não permanece no mesmo estado aguardando suas respostas.
 
