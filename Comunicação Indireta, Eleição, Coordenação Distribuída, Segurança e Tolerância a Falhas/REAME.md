@@ -2,7 +2,7 @@
 
 Leandro Furlam, Isauflânia Ribeiro, Allan Fermao
 
-[Video (14/08/2022)](https://drive.google.com/file/d/1vzsqXTEsMnqs4J2i_-FyfzS4k-6xFLT3/view?usp=sharing)
+[Video (14/08/2022)](https://drive.google.com/file/d/184iOYPQek08rOw8o3KwMfnDvFHl2t0mW/view?usp=sharing)
 
 ## Identificador
 
@@ -22,9 +22,9 @@ As trocas de fanout podem ser úteis quando a mesma mensagem precisa ser enviada
 | ppd/init | anúncio de entrada na rede | NodeId |
 | ppd/pubkey | chave pública do nó | NodeId,PubKey |
 | ppd/election | eleição do líder que gerará o desafio | NodeId,ElectionNumber |
-| ppd/challenge | anúncio do desafio | NodeId,TransactionNumber, Challenge,Sign |
+| ppd/challenge | anúncio do desafio | NodeId,TransactionNumber,Challenge,Sign |
 | ppd/submit | submissão do desafio | NodeId,TransactionNumber,Seed,Sign |
-| ppd/voting | votação para a validade do desafio | NodeId, SolutionId,TransactionNumber,Seed,Vote,Sign |
+| ppd/voting | votação para a validade do desafio | NodeId,SolutionId,TransactionNumber,Seed,Vote,Sign |
 
 onde:
 
@@ -52,7 +52,7 @@ A não ser nas exchanges *ppd/init* e *ppd/pubkey*, todas as demais possuem mens
 
 ## Eleição e Geração do desafio
 
-A eleição do líder se dá através da exchange *ppd/election*, onde cada um enviará um número aleatório (inicialmente entre 0 e 1 - confiamos nos integrantes). O dono do maior número é o líder, que gerará o desafio com um nível, aleatório para cada nó, entre `CHALLENGE_LEVEL_RANGE`, representando o desafio. Em seguida o desafio será publicado na *ppd/challenge*. Junto com o desafio é também enviado o identificador do líder, para conferência.
+A eleição do líder se dá através da exchange *ppd/election*, onde cada um enviará um número aleatório (inteiro de 32 bits - confiamos nos integrantes). O dono do maior número é o líder, que gerará o desafio com um nível, aleatório para cada nó, entre `CHALLENGE_LEVEL_RANGE`, representando o desafio. Em seguida o desafio será publicado na *ppd/challenge*. Junto com o desafio é também enviado o identificador do líder, para conferência.
 
 ## Mineração
 
